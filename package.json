@@ -1,0 +1,52 @@
+{
+  "name": "@nykk/atomic-crm-mcp",
+  "version": "0.0.1",
+  "description": "MCP server for Atomic CRM (Supabase-based)",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "atomic-crm-mcp": "./dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nykk-io/atomic-crm-mcp"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc && chmod +x dist/index.js",
+    "clean": "rm -rf dist",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run clean && npm run build",
+    "skills:install": "skills experimental_install"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "mcp",
+    "atomic-crm",
+    "crm",
+    "supabase",
+    "claude"
+  ],
+  "author": "Javier Infante <jabi@nykk.io>",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@supabase/supabase-js": "^2.98.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "skills": "latest",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.0"
+  }
+}
