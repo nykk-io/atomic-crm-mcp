@@ -72,7 +72,8 @@ The storage path will be: {note_type}_notes/{note_id}/{filename}
 
 Returns the attachment metadata that was appended to the note's attachments array:
   {
-    name: string,        // original filename
+    title: string,       // original filename (shown in the frontend)
+    src: string,         // public URL to view/download the file
     path: string,        // storage path (use this to delete later)
     size: number,        // file size in bytes
     type: string,        // MIME type
@@ -108,9 +109,15 @@ Examples:
 
         if (uploadError) throw new Error(`Storage upload failed: ${uploadError.message}`);
 
-        // Build attachment metadata
+        // Get public URL for the uploaded file
+        const { data: urlData } = client.storage
+          .from(BUCKET)
+          .getPublicUrl(storagePath);
+
+        // Build attachment metadata matching the frontend schema
         const attachment = {
-          name: filename,
+          title: filename,
+          src: urlData.publicUrl,
           path: storagePath,
           size: fileBuffer.byteLength,
           type: content_type,
@@ -330,7 +337,7 @@ Returns a confirmation message on success.`,
           throw new Error(fetchError.message);
         }
 
-        type AttachmentRecord = { path: string; [key: string]: unknown };
+        type AttachmentRecord = { path?: string; src?: string; [key: string]: unknown };
         const existingAttachments: AttachmentRecord[] = note.attachments ?? [];
         const attachmentExists = existingAttachments.some(
           (a) => a.path === storage_path
