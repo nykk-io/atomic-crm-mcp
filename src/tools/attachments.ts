@@ -1,7 +1,7 @@
+import { readFile } from "node:fs/promises";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { MAX_UPLOAD_BASE64_CHARS } from "../constants.js";
 
 // ── Input schemas ─────────────────────────────────────────────────────────────
 
@@ -21,11 +21,10 @@ const UploadAttachmentSchema = z.object({
     .string()
     .min(1)
     .describe("MIME type of the file (e.g. 'application/pdf', 'image/png')"),
-  file_base64: z
+  file_path: z
     .string()
     .min(1)
-    .max(MAX_UPLOAD_BASE64_CHARS)
-    .describe("Base64-encoded file content (max ~7.5 MB decoded)"),
+    .describe("Absolute path to the file on disk (e.g. '/home/user/docs/proposal.pdf')"),
 });
 
 const DownloadAttachmentSchema = z.object({
@@ -68,7 +67,7 @@ export function registerAttachmentTools(
       title: "Upload Attachment to Note",
       description: `Uploads a file to Supabase Storage and links it to a contact or deal note.
 
-The file must be provided as a base64-encoded string.
+The file is read from disk by the MCP server — pass the absolute path on the local filesystem.
 The storage path will be: {note_type}_notes/{note_id}/{filename}
 
 Returns the attachment metadata that was appended to the note's attachments array:
@@ -83,7 +82,8 @@ Returns the attachment metadata that was appended to the note's attachments arra
 Examples:
   - Attach a PDF to a deal note:
       { note_type: "deal", note_id: 7, filename: "proposal.pdf",
-        content_type: "application/pdf", file_base64: "JVBERi0x..." }`,
+        content_type: "application/pdf",
+        file_path: "/home/jaio/Proyectos/quotes/2026/04/proposal.pdf" }`,
       inputSchema: UploadAttachmentSchema,
       annotations: {
         readOnlyHint: false,
@@ -92,10 +92,10 @@ Examples:
         openWorldHint: false,
       },
     },
-    async ({ note_type, note_id, filename, content_type, file_base64 }) => {
+    async ({ note_type, note_id, filename, content_type, file_path }) => {
       try {
-        // Decode base64 to buffer
-        const fileBuffer = Buffer.from(file_base64, "base64");
+        // Read file from disk
+        const fileBuffer = await readFile(file_path);
         const storagePath = `${note_type}_notes/${note_id}/${filename}`;
 
         // Upload to Supabase Storage
